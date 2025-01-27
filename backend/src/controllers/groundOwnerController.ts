@@ -1,11 +1,9 @@
 import { Request, Response } from "express";
-import {
-  createGroundOwner,
-  getGroundOwners,
-} from "../services/groundOwnerService";
 import { sendResponse, sendError } from "../utils/responseHandler";
 import { uploadFiles, UploadResult } from "../utils/multerUploader";
 import { groundOwnerValidationSchema } from "../validations/groundOwnerValidation";
+import datasources from "../services/dao";
+import { IGroundOwner } from "../models/groundOwnerModel";
 
 export const registerGroundOwner = async (req: Request, res: Response) => {
   try {
@@ -41,7 +39,9 @@ export const registerGroundOwner = async (req: Request, res: Response) => {
       paymentMethod,
     };
 
-    const newGroundOwner = await createGroundOwner(groundOwnerData);
+    const newGroundOwner = await datasources.groundOwnerDAOService.create(
+      groundOwnerData as IGroundOwner
+    );
     return sendResponse(
       res,
       201,
@@ -56,7 +56,7 @@ export const registerGroundOwner = async (req: Request, res: Response) => {
 
 export const getGroundOwnerList = async (_req: Request, res: Response) => {
   try {
-    const groundOwners = await getGroundOwners();
+    const groundOwners = await datasources.groundOwnerDAOService.findAll();
     sendResponse(res, 200, "Ground owners fetched successfully", groundOwners);
   } catch (error: any) {
     console.error(error);

@@ -111,7 +111,7 @@ export default class CrudRepository<
       .exec() as Promise<M | null>;
   }
 
-  async findOne(
+  async findByOne(
     filter: FilterQuery<M>,
     options?: QueryOptions
   ): Promise<M | null> {
@@ -141,11 +141,11 @@ export default class CrudRepository<
     filter: FilterQuery<M>,
     options?: QueryOptions
   ): Promise<void> {
-    await this.model.deleteOne(filter, options);
+    await this.model.deleteOne(filter, options as any);
   }
 
   async deleteAll(options?: QueryOptions): Promise<void> {
-    await this.model.deleteMany({}, options);
+    await this.model.deleteMany({}, options as any);
   }
 
   async deleteById(id: Id, options?: QueryOptions): Promise<void> {
@@ -156,7 +156,9 @@ export default class CrudRepository<
     filter: FilterQuery<M>,
     options?: QueryOptions
   ): Promise<boolean> {
-    const count = await this.model.countDocuments(filter, options).exec();
+    const count = await this.model
+      .countDocuments(filter, options as any)
+      .exec();
     return count > 0;
   }
 }

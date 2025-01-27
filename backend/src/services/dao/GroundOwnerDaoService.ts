@@ -1,8 +1,8 @@
 import { FilterQuery, UpdateQuery, QueryOptions } from "mongoose";
-import { IGroundOwner } from "../models/groundOwnerModel";
-import GroundOwnerRepository from "../repositories/GroundOwnerRepository";
+import { IGroundOwner } from "../../models/groundOwnerModel";
+import GroundOwnerRepository from "../../repositories/GroundOwnerRepository";
 
-import { appModelTypes } from "../@types/app-model";
+import { appModelTypes } from "../../@types/app-model";
 import ICrudDAO = appModelTypes.ICrudDAO;
 
 export default class GroundOwnerDAOService implements ICrudDAO<IGroundOwner> {
