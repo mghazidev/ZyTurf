@@ -5,11 +5,15 @@ export const useGroundOwnerApi = () => {
   const axiosAuth = useAxiosAuth();
 
   const createGroundOwner = async (
-    requestParameters: appModelTypes.GroundOwnerRequest
+    formData: FormData
   ): Promise<appModelTypes.ApiResponseSuccess<any>> => {
     const response = await axiosAuth.post<
       appModelTypes.ApiResponseSuccess<any>
-    >("/new-ground-owner", requestParameters);
+    >("/ground-owner/register", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data;
   };
 
@@ -18,7 +22,7 @@ export const useGroundOwnerApi = () => {
     requestParameters: appModelTypes.GroundOwnerRequest
   ): Promise<appModelTypes.ApiResponseSuccess<any>> => {
     const response = await axiosAuth.put<appModelTypes.ApiResponseSuccess<any>>(
-      `/ground-owners/${groundOwnerId}`,
+      `/ground-owner/${groundOwnerId}`,
       requestParameters
     );
     return response.data;
@@ -28,7 +32,7 @@ export const useGroundOwnerApi = () => {
     groundOwnerId: string
   ): Promise<appModelTypes.ApiResponseSuccess<any>> => {
     const response = await axiosAuth.get<appModelTypes.ApiResponseSuccess<any>>(
-      `/ground-owners/${groundOwnerId}`
+      `/ground-owner/${groundOwnerId}`
     );
     return response.data;
   };
@@ -37,7 +41,7 @@ export const useGroundOwnerApi = () => {
     appModelTypes.ApiResponseSuccess<any>
   > => {
     const response = await axiosAuth.get<appModelTypes.ApiResponseSuccess<any>>(
-      "/get-ground-owners"
+      "/get-owners"
     );
     return response.data;
   };
@@ -47,7 +51,7 @@ export const useGroundOwnerApi = () => {
   ): Promise<appModelTypes.ApiResponseSuccess<any>> => {
     const response = await axiosAuth.delete<
       appModelTypes.ApiResponseSuccess<any>
-    >(`/ground-owners/${groundOwnerId}`);
+    >(`/ground-owner/${groundOwnerId}`);
     return response.data;
   };
 

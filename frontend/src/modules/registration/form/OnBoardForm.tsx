@@ -2,20 +2,11 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCreateGroundOwner } from "@/modules/registration/hook/useGroundOwner"; // Adjust the import path
-
-const formSchema = z.object({
-  fullname: z.string().min(1, "Full Name is required"),
-  contactNo: z.string().min(1, "Contact Number is required"),
-  groundLocation: z.string().min(1, "Ground Location is required"),
-  paymentMethod: z.string().min(1, "Payment Method is required"),
-  cnicFrontUrl: z.instanceof(File).optional(),
-  cnicBackUrl: z.instanceof(File).optional(),
-});
-
-type FormData = z.infer<typeof formSchema>;
+import { useCreateGroundOwner } from "@/modules/registration/hook/useGroundOwner";
+import { formSchema } from "./formSchema";
+import type { FormData } from "./formSchema";
+import { appModelTypes } from "../@types/app-form";
 
 const OnBoardForm = () => {
   const {
@@ -27,19 +18,34 @@ const OnBoardForm = () => {
     resolver: zodResolver(formSchema),
   });
 
+  const handleFileChange = (
+    fieldName: keyof FormData,
+    files: FileList | null
+  ) => {
+    if (files?.length) {
+      setValue(fieldName, files[0], { shouldValidate: true });
+    }
+  };
+
   const { mutate, isLoading, isError, error } = useCreateGroundOwner();
 
   const onSubmit = (data: FormData) => {
-    const requestData = {
-      fullname: data.fullname,
-      contactNo: data.contactNo,
-      groundLocation: data.groundLocation,
-      paymentMethod: data.paymentMethod,
-      cnicFrontUrl: data.cnicFrontUrl,
-      cnicBackUrl: data.cnicBackUrl,
-    };
+    const formData = new FormData();
+    formData.append("fullname", data.fullname);
+    formData.append("contactNo", data.contactNo);
+    formData.append("groundLocation", data.groundLocation);
+    formData.append("paymentMethod", data.paymentMethod);
 
-    mutate(requestData);
+    if (data.cnicFrontUrl) {
+      formData.append("cnicFrontUrl", data.cnicFrontUrl);
+    }
+    if (data.cnicBackUrl) {
+      formData.append("cnicBackUrl", data.cnicBackUrl);
+    }
+
+    console.log(formData);
+
+    mutate(formData);
   };
 
   return (
@@ -59,7 +65,7 @@ const OnBoardForm = () => {
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => setValue("cnicFrontUrl", e.target.files?.[0])}
+          onChange={(e) => handleFileChange("cnicFrontUrl", e.target.files)}
         />
         {errors.cnicFrontUrl && <p>{errors.cnicFrontUrl.message}</p>}
 
@@ -67,7 +73,7 @@ const OnBoardForm = () => {
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => setValue("cnicBackUrl", e.target.files?.[0])}
+          onChange={(e) => handleFileChange("cnicBackUrl", e.target.files)}
         />
         {errors.cnicBackUrl && <p>{errors.cnicBackUrl.message}</p>}
 

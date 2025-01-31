@@ -5,4 +5,8 @@ const groundOwnerController_1 = require("../controllers/groundOwnerController");
 const groundOwnerRoutes = (0, express_1.Router)();
 groundOwnerRoutes.post("/register", groundOwnerController_1.registerGroundOwner);
 groundOwnerRoutes.get("/get-owners", groundOwnerController_1.getGroundOwnerList);
+groundOwnerRoutes.delete("/delete-all", groundOwnerController_1.deleteAllGroundOwners);
+groundOwnerRoutes.delete("/:id", groundOwnerController_1.deleteGroundOwnerById);
+groundOwnerRoutes.get("/:id", groundOwnerController_1.getGroundOwnerById);
+groundOwnerRoutes.put("/:id", groundOwnerController_1.updateGroundOwnerById);
 exports.default = groundOwnerRoutes;

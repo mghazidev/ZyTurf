@@ -6,14 +6,8 @@ export const useCreateGroundOwner = () => {
   const api = useGroundOwnerApi();
   const queryClient = useQueryClient();
 
-  return useMutation<
-    appModelTypes.ApiResponseSuccess<any>,
-    Error,
-    appModelTypes.GroundOwnerRequest
-  >({
-    mutationFn: (requestParameters: appModelTypes.GroundOwnerRequest) => {
-      return api.createGroundOwner(requestParameters);
-    },
+  return useMutation<appModelTypes.ApiResponseSuccess<any>, Error, FormData>({
+    mutationFn: (formData: FormData) => api.createGroundOwner(formData), // ensure mutationFn is used correctly
     onSuccess: async () => {
       await queryClient.invalidateQueries(["groundOwners"]);
     },

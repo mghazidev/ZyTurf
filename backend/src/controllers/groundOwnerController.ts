@@ -1,36 +1,114 @@
 import { Request, Response } from "express";
 import { sendResponse, sendError } from "../utils/responseHandler";
-import { uploadFiles, UploadResult } from "../utils/multerUploader";
-import { groundOwnerValidationSchema } from "../validations/groundOwnerValidation";
 import datasources from "../services/dao";
 import { IGroundOwner } from "../models/groundOwnerModel";
 import Joi from "joi";
-
+import { HttpStatus } from "../utils/utils";
+import { CustomAPIError } from "../errors/errors";
+import { UPLOAD_BASE_PATH, ALLOWED_FILE_TYPES } from "../config/config";
+import { Generic } from "../utils/Generic";
+import formidable from "formidable";
+import path from "path";
 export const registerGroundOwner = async (req: Request, res: Response) => {
   try {
-    const uploadResult: UploadResult = await uploadFiles(req, res, [
-      "cnicFrontUrl",
-      "cnicBackUrl",
-    ]);
-    if (!uploadResult) {
-      return sendError(res, 400, "File upload failed");
+    const form = formidable();
+
+    // Promise to parse the form and handle fields/files
+    const [fields, files] = await new Promise<[any, any]>((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) {
+          console.error("Error parsing form:", err);
+          reject(
+            CustomAPIError.response(err.message, HttpStatus.BAD_REQUEST.code)
+          );
+        } else {
+          resolve([fields, files]);
+        }
+      });
+    });
+
+    // Convert arrays to strings if needed (formidable may send arrays)
+    Object.keys(fields).forEach((key) => {
+      if (Array.isArray(fields[key])) {
+        fields[key] = fields[key][0]; // Convert array to string
+      }
+    });
+
+    // Validate incoming request body using Joi
+    const { error, value } = Joi.object<any>({
+      fullname: Joi.string().required().label("Full Name"),
+      contactNo: Joi.string().required().label("Contact Number"),
+      groundLocation: Joi.string().required().label("Ground Location"),
+      paymentMethod: Joi.string().required().label("Payment Method"),
+    }).validate(fields);
+
+    if (error) {
+      return sendError(
+        res,
+        HttpStatus.BAD_REQUEST.code,
+        error.details[0].message
+      );
     }
 
-    const { fullname, contactNo, groundLocation, paymentMethod } = req.body;
-    const cnicFrontUrl = uploadResult.files.cnicFrontUrl;
-    const cnicBackUrl = uploadResult.files.cnicBackUrl;
+    const { fullname, contactNo, groundLocation, paymentMethod } = value;
 
-    if (
-      !fullname ||
-      !contactNo ||
-      !cnicFrontUrl ||
-      !cnicBackUrl ||
-      !groundLocation ||
-      !paymentMethod
-    ) {
-      return sendError(res, 400, "All fields are required");
+    // Check if a ground owner with the same contact number already exists
+    const existingGroundOwner =
+      await datasources.groundOwnerDAOService.findByAny({ contactNo });
+    if (existingGroundOwner) {
+      return sendError(
+        res,
+        HttpStatus.BAD_REQUEST.code,
+        "Ground owner with this contact number already exists"
+      );
     }
 
+    // Handle file uploads for CNIC front and back
+    const basePath = `${UPLOAD_BASE_PATH}/groundOwner`;
+
+    let cnicFrontUrl = "";
+    let cnicBackUrl = "";
+
+    const cnicFront = files.cnicFrontUrl;
+    const cnicBack = files.cnicBackUrl;
+    console.log("CNIC Front MIME Type:", cnicFront?.mimetype);
+    console.log("CNIC Back MIME Type:", cnicBack?.mimetype);
+
+    // Validate and handle CNIC front file
+    if (cnicFront) {
+      if (!ALLOWED_FILE_TYPES.includes(cnicFront.mimetype || "")) {
+        return sendError(
+          res,
+          HttpStatus.BAD_REQUEST.code,
+          "Invalid file type for CNIC front"
+        );
+      }
+      const outputPath = await Generic.compressImage(cnicFront.filepath);
+      cnicFrontUrl = await Generic.getImagePath({
+        tempPath: outputPath,
+        filename: cnicFront.originalFilename || "cnicFront",
+        basePath,
+      });
+    }
+
+    // Validate and handle CNIC back file
+    if (cnicBack) {
+      if (!ALLOWED_FILE_TYPES.includes(cnicBack.mimetype || "")) {
+        return sendError(
+          res,
+          HttpStatus.BAD_REQUEST.code,
+          "Invalid file type for CNIC back"
+        );
+      }
+      const outputPath = await Generic.compressImage(cnicBack.filepath);
+      cnicBackUrl = await Generic.getImagePath({
+        tempPath: outputPath,
+        filename: cnicBack.originalFilename || "cnicBack",
+        basePath,
+      });
+    }
+
+    // Prepare data for the new ground owner
     const groundOwnerData = {
       fullname,
       contactNo,
@@ -40,18 +118,20 @@ export const registerGroundOwner = async (req: Request, res: Response) => {
       paymentMethod,
     };
 
+    // Create the new ground owner entry
     const newGroundOwner = await datasources.groundOwnerDAOService.create(
       groundOwnerData as IGroundOwner
     );
+
     return sendResponse(
       res,
-      201,
+      HttpStatus.CREATED.code,
       "Ground owner registered successfully",
       newGroundOwner
     );
   } catch (error: any) {
     console.error(error);
-    return sendError(res, 500, "Server Error", error.message);
+    return sendError(res, HttpStatus.INTERNAL_SERVER_ERROR.code, error.message);
   }
 };
 

@@ -1,18 +1,4 @@
-import { z } from "zod";
-
-const formSchema = z.object({
-  fullname: z.string().min(1, "Full Name is required"),
-  contactNo: z.string().min(1, "Contact Number is required"),
-  groundLocation: z.string().min(1, "Ground Location is required"),
-  paymentMethod: z.string().min(1, "Payment Method is required"),
-  cnicFront: z.instanceof(File).optional(),
-  cnicBack: z.instanceof(File).optional(),
-});
-
-export type FormData = z.infer<typeof formSchema>;
-
 export namespace appModelTypes {
-  // API Response structure
   export interface ApiResponseSuccess<T> {
     success: boolean;
     data: T;
@@ -22,8 +8,8 @@ export namespace appModelTypes {
   export interface GroundOwnerRequest {
     fullname: string;
     contactNo: string;
-    cnicFrontUrl: any;
-    cnicBackUrl: any;
+    cnicFrontUrl: any | File;
+    cnicBackUrl: any | File;
     groundLocation: string;
     paymentMethod: string;
   }
