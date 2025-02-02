@@ -17,7 +17,7 @@ const fileExist = async (filePath: string) => fs.existsSync(filePath); // Custom
 
 // Compress Image Logic
 const compressImage = async (imagePath: string): Promise<string> => {
-  const outputPath = path.join("uploads/photo", "image.webp"); // Set output path to a folder inside your server
+  const outputPath = path.join("uploads", "image.webp"); // Set output path to a folder inside your server
 
   try {
     // Resize and compress the image using sharp

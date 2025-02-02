@@ -69,8 +69,8 @@ export const registerGroundOwner = async (req: Request, res: Response) => {
     let cnicFrontUrl = "";
     let cnicBackUrl = "";
 
-    const cnicFront = files.cnicFrontUrl;
-    const cnicBack = files.cnicBackUrl;
+    const cnicFront = files.cnicFrontUrl?.[0];
+    const cnicBack = files.cnicBackUrl?.[0];
     console.log("CNIC Front MIME Type:", cnicFront?.mimetype);
     console.log("CNIC Back MIME Type:", cnicBack?.mimetype);
 

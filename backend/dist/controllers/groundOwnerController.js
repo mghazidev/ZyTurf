@@ -22,6 +22,7 @@ const config_1 = require("../config/config");
 const Generic_1 = require("../utils/Generic");
 const formidable_1 = __importDefault(require("formidable"));
 const registerGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     try {
         const form = (0, formidable_1.default)();
         // Promise to parse the form and handle fields/files
@@ -62,8 +63,10 @@ const registerGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, func
         const basePath = `${config_1.UPLOAD_BASE_PATH}/groundOwner`;
         let cnicFrontUrl = "";
         let cnicBackUrl = "";
-        const cnicFront = files.cnicFrontUrl;
-        const cnicBack = files.cnicBackUrl;
+        const cnicFront = (_a = files.cnicFrontUrl) === null || _a === void 0 ? void 0 : _a[0];
+        const cnicBack = (_b = files.cnicBackUrl) === null || _b === void 0 ? void 0 : _b[0];
+        console.log("CNIC Front MIME Type:", cnicFront === null || cnicFront === void 0 ? void 0 : cnicFront.mimetype);
+        console.log("CNIC Back MIME Type:", cnicBack === null || cnicBack === void 0 ? void 0 : cnicBack.mimetype);
         // Validate and handle CNIC front file
         if (cnicFront) {
             if (!config_1.ALLOWED_FILE_TYPES.includes(cnicFront.mimetype || "")) {
