@@ -48,7 +48,7 @@ const getImagePath = async (params: IGetImagePath): Promise<string> => {
   // Rename the file (move it to the new path)
   await rename(params.tempPath, newPath);
 
-  return newPath;
+  return newPath.replace(/\\/g, "/");
 };
 
 // Export an object containing the functions

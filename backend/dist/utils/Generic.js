@@ -24,7 +24,7 @@ const rename = (0, util_1.promisify)(fs_1.default.rename);
 const fileExist = (filePath) => __awaiter(void 0, void 0, void 0, function* () { return fs_1.default.existsSync(filePath); }); // Custom file exist function
 // Compress Image Logic
 const compressImage = (imagePath) => __awaiter(void 0, void 0, void 0, function* () {
-    const outputPath = path_1.default.join("uploads/photo", "image.webp"); // Set output path to a folder inside your server
+    const outputPath = path_1.default.join("uploads", "image.webp"); // Set output path to a folder inside your server
     try {
         // Resize and compress the image using sharp
         yield (0, sharp_1.default)(imagePath)
@@ -49,7 +49,7 @@ const getImagePath = (params) => __awaiter(void 0, void 0, void 0, function* () 
     const newPath = path_1.default.join(params.basePath, newFileName);
     // Rename the file (move it to the new path)
     yield rename(params.tempPath, newPath);
-    return newPath;
+    return newPath.replace(/\\/g, "/");
 });
 // Export an object containing the functions
 exports.Generic = {
