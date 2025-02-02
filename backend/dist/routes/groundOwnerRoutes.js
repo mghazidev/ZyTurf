@@ -8,5 +8,5 @@ groundOwnerRoutes.get("/get-owners", groundOwnerController_1.getGroundOwnerList)
 groundOwnerRoutes.delete("/delete-all", groundOwnerController_1.deleteAllGroundOwners);
 groundOwnerRoutes.delete("/:id", groundOwnerController_1.deleteGroundOwnerById);
 groundOwnerRoutes.get("/:id", groundOwnerController_1.getGroundOwnerById);
-groundOwnerRoutes.put("/:id", groundOwnerController_1.updateGroundOwnerById);
+groundOwnerRoutes.put("/:id", groundOwnerController_1.updateGroundOwner);
 exports.default = groundOwnerRoutes;

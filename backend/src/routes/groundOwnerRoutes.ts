@@ -5,7 +5,7 @@ import {
   deleteAllGroundOwners,
   deleteGroundOwnerById,
   getGroundOwnerById,
-  updateGroundOwnerById,
+  updateGroundOwner,
 } from "../controllers/groundOwnerController";
 
 const groundOwnerRoutes = Router();
@@ -15,6 +15,6 @@ groundOwnerRoutes.get("/get-owners", getGroundOwnerList);
 groundOwnerRoutes.delete("/delete-all", deleteAllGroundOwners);
 groundOwnerRoutes.delete("/:id", deleteGroundOwnerById);
 groundOwnerRoutes.get("/:id", getGroundOwnerById);
-groundOwnerRoutes.put("/:id", updateGroundOwnerById);
+groundOwnerRoutes.put("/:id", updateGroundOwner);
 
 export default groundOwnerRoutes;

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateGroundOwnerById = exports.getGroundOwnerById = exports.deleteGroundOwnerById = exports.deleteAllGroundOwners = exports.getGroundOwnerList = exports.registerGroundOwner = void 0;
+exports.getGroundOwnerById = exports.deleteGroundOwnerById = exports.deleteAllGroundOwners = exports.getGroundOwnerList = exports.updateGroundOwner = exports.registerGroundOwner = void 0;
 const responseHandler_1 = require("../utils/responseHandler");
 const dao_1 = __importDefault(require("../services/dao"));
 const joi_1 = __importDefault(require("joi"));
@@ -29,7 +29,6 @@ const registerGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, func
         const [fields, files] = yield new Promise((resolve, reject) => {
             form.parse(req, (err, fields, files) => {
                 if (err) {
-                    console.error("Error parsing form:", err);
                     reject(errors_1.CustomAPIError.response(err.message, utils_1.HttpStatus.BAD_REQUEST.code));
                 }
                 else {
@@ -65,8 +64,6 @@ const registerGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, func
         let cnicBackUrl = "";
         const cnicFront = (_a = files.cnicFrontUrl) === null || _a === void 0 ? void 0 : _a[0];
         const cnicBack = (_b = files.cnicBackUrl) === null || _b === void 0 ? void 0 : _b[0];
-        console.log("CNIC Front MIME Type:", cnicFront === null || cnicFront === void 0 ? void 0 : cnicFront.mimetype);
-        console.log("CNIC Back MIME Type:", cnicBack === null || cnicBack === void 0 ? void 0 : cnicBack.mimetype);
         // Validate and handle CNIC front file
         if (cnicFront) {
             if (!config_1.ALLOWED_FILE_TYPES.includes(cnicFront.mimetype || "")) {
@@ -110,6 +107,93 @@ const registerGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.registerGroundOwner = registerGroundOwner;
+const updateGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const form = (0, formidable_1.default)();
+        // Parse the form
+        const [fields, files] = yield new Promise((resolve, reject) => {
+            form.parse(req, (err, fields, files) => {
+                if (err) {
+                    reject(errors_1.CustomAPIError.response(err.message, utils_1.HttpStatus.BAD_REQUEST.code));
+                }
+                else {
+                    resolve([fields, files]);
+                }
+            });
+        });
+        // Extract groundOwnerId from params
+        const groundOwnerId = req.params.id;
+        // Convert arrays to strings if needed (formidable may send arrays)
+        Object.keys(fields).forEach((key) => {
+            if (Array.isArray(fields[key])) {
+                fields[key] = fields[key][0]; // Convert array to string
+            }
+        });
+        // Validate fields
+        const { error, value } = joi_1.default.object({
+            fullname: joi_1.default.string().required().label("Full Name"),
+            contactNo: joi_1.default.string().required().label("Contact Number"),
+            groundLocation: joi_1.default.string().required().label("Ground Location"),
+            paymentMethod: joi_1.default.string().required().label("Payment Method"),
+        }).validate(fields);
+        if (error) {
+            return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.BAD_REQUEST.code, error.details[0].message);
+        }
+        const { fullname, contactNo, groundLocation, paymentMethod } = value;
+        // Fetch the existing Ground Owner details
+        const existingGroundOwner = yield dao_1.default.groundOwnerDAOService.findById(groundOwnerId);
+        if (!existingGroundOwner) {
+            return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.BAD_REQUEST.code, "Ground owner not found");
+        }
+        // Handle file uploads (CNIC front and back)
+        const cnicFront = files.cnicFrontUrl;
+        const cnicBack = files.cnicBackUrl;
+        const basePath = `${config_1.UPLOAD_BASE_PATH}/groundOwner`;
+        let cnicFrontUrl = existingGroundOwner.cnicFrontUrl; // default to existing URL if no new file
+        let cnicBackUrl = existingGroundOwner.cnicBackUrl; // default to existing URL if no new file
+        // Validate and handle CNIC front file
+        if (cnicFront) {
+            if (!config_1.ALLOWED_FILE_TYPES.includes(cnicFront.mimetype)) {
+                return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.BAD_REQUEST.code, "Invalid file type for CNIC front");
+            }
+            const outputPath = yield Generic_1.Generic.compressImage(cnicFront.filepath);
+            cnicFrontUrl = yield Generic_1.Generic.getImagePath({
+                tempPath: outputPath,
+                filename: cnicFront.originalFilename,
+                basePath,
+            });
+        }
+        // Validate and handle CNIC back file
+        if (cnicBack) {
+            if (!config_1.ALLOWED_FILE_TYPES.includes(cnicBack.mimetype)) {
+                return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.BAD_REQUEST.code, "Invalid file type for CNIC back");
+            }
+            const outputPath = yield Generic_1.Generic.compressImage(cnicBack.filepath);
+            cnicBackUrl = yield Generic_1.Generic.getImagePath({
+                tempPath: outputPath,
+                filename: cnicBack.originalFilename,
+                basePath,
+            });
+        }
+        // Prepare the payload for the update
+        const payload = {
+            fullname: fullname || existingGroundOwner.fullname,
+            contactNo: contactNo || existingGroundOwner.contactNo,
+            groundLocation: groundLocation || existingGroundOwner.groundLocation,
+            paymentMethod: paymentMethod || existingGroundOwner.paymentMethod,
+            cnicFrontUrl, // New or existing URL for CNIC front
+            cnicBackUrl, // New or existing URL for CNIC back
+        };
+        // Update Ground Owner in the database
+        const updatedGroundOwner = yield dao_1.default.groundOwnerDAOService.updateByAny({ _id: groundOwnerId }, payload);
+        return (0, responseHandler_1.sendResponse)(res, utils_1.HttpStatus.OK.code, "Ground owner updated successfully", updatedGroundOwner);
+    }
+    catch (error) {
+        console.error(error);
+        return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.INTERNAL_SERVER_ERROR.code, error.message);
+    }
+});
+exports.updateGroundOwner = updateGroundOwner;
 const getGroundOwnerList = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const groundOwners = yield dao_1.default.groundOwnerDAOService.findAll();
@@ -163,33 +247,3 @@ const getGroundOwnerById = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.getGroundOwnerById = getGroundOwnerById;
-const updateGroundOwnerById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { id } = req.params;
-        const { error, value } = joi_1.default.object({
-            fullname: joi_1.default.string().optional().label("Full Name"),
-            contactNo: joi_1.default.string().optional().label("Contact No"),
-            cnicFrontUrl: joi_1.default.string().optional().label("CNIC Front URL"),
-            cnicBackUrl: joi_1.default.string().optional().label("CNIC Back URL"),
-            groundLocation: joi_1.default.string().optional().label("Ground Location"),
-            paymentMethod: joi_1.default.string().optional().label("Payment Method"),
-        }).validate(req.body);
-        if (error) {
-            return (0, responseHandler_1.sendError)(res, 400, "Validation Error", error.details[0].message);
-        }
-        const existingGroundOwner = yield dao_1.default.groundOwnerDAOService.findById(id);
-        if (!existingGroundOwner) {
-            return (0, responseHandler_1.sendError)(res, 404, "Ground owner not found");
-        }
-        const updatedGroundOwner = yield dao_1.default.groundOwnerDAOService.updateByAny({ _id: id }, value);
-        if (!updatedGroundOwner) {
-            return (0, responseHandler_1.sendError)(res, 404, "Ground owner not found");
-        }
-        return (0, responseHandler_1.sendResponse)(res, 200, "Ground owner updated successfully", updatedGroundOwner);
-    }
-    catch (error) {
-        console.error(error);
-        return (0, responseHandler_1.sendError)(res, 500, "Server Error", error.message);
-    }
-});
-exports.updateGroundOwnerById = updateGroundOwnerById;
