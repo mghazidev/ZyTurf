@@ -8,7 +8,6 @@ import { CustomAPIError } from "../errors/errors";
 import { UPLOAD_BASE_PATH, ALLOWED_FILE_TYPES } from "../config/config";
 import { Generic } from "../utils/Generic";
 import formidable from "formidable";
-import path from "path";
 
 export const registerGroundOwner = async (req: Request, res: Response) => {
   try {

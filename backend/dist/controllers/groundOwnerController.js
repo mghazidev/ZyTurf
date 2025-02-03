@@ -108,6 +108,7 @@ const registerGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, func
 });
 exports.registerGroundOwner = registerGroundOwner;
 const updateGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     try {
         const form = (0, formidable_1.default)();
         // Parse the form
@@ -146,8 +147,8 @@ const updateGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, functi
             return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.BAD_REQUEST.code, "Ground owner not found");
         }
         // Handle file uploads (CNIC front and back)
-        const cnicFront = files.cnicFrontUrl;
-        const cnicBack = files.cnicBackUrl;
+        const cnicFront = (_a = files.cnicFrontUrl) === null || _a === void 0 ? void 0 : _a[0];
+        const cnicBack = (_b = files.cnicBackUrl) === null || _b === void 0 ? void 0 : _b[0];
         const basePath = `${config_1.UPLOAD_BASE_PATH}/groundOwner`;
         let cnicFrontUrl = existingGroundOwner.cnicFrontUrl; // default to existing URL if no new file
         let cnicBackUrl = existingGroundOwner.cnicBackUrl; // default to existing URL if no new file

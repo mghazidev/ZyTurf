@@ -1,7 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import usersEndpoint from "./endpoints/users";
 import groundOwnerEndpoint from "./endpoints/groundOwnerEndpoint";
 import cors from "cors";
 dotenv.config();
@@ -11,15 +10,14 @@ const PORT = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: "*", // Replace "*" with your frontend URL if you want to restrict access
-    methods: ["GET", "POST", "PUT", "DELETE"], // Allow specific methods
-    allowedHeaders: ["Content-Type", "Authorization"], // Specify allowed headers
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
 app.use(express.json());
 
-app.use("/api/v1", usersEndpoint);
 app.use("/api/v1", groundOwnerEndpoint);
 
 mongoose

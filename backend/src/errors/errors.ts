@@ -1,6 +1,3 @@
-// errors.ts
-import { HttpStatus } from "../utils/utils";
-
 export class CustomAPIError extends Error {
   statusCode: number;
 

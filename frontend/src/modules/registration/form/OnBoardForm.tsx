@@ -1,52 +1,20 @@
 "use client";
-
 import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useCreateGroundOwner } from "@/modules/registration/hook/useGroundOwner";
-import { formSchema } from "./formSchema";
-import type { FormData } from "./formSchema";
-import { appModelTypes } from "../@types/app-form";
+import { useRecaptcha } from "@/modules/registration/hook/useRecaptcha";
+import { useOnBoardForm } from "@/modules/registration/hook/useOnBoardForm";
 
 const OnBoardForm = () => {
+  const { recaptchaToken, RECAPTCHA_SITE_KEY } = useRecaptcha();
   const {
     register,
     handleSubmit,
-    formState: { errors },
-    setValue,
-  } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-  });
-
-  const handleFileChange = (
-    fieldName: keyof FormData,
-    files: FileList | null
-  ) => {
-    if (files?.length) {
-      setValue(fieldName, files[0], { shouldValidate: true });
-    }
-  };
-
-  const { mutate, isLoading, isError, error } = useCreateGroundOwner();
-
-  const onSubmit = (data: FormData) => {
-    const formData = new FormData();
-    formData.append("fullname", data.fullname);
-    formData.append("contactNo", data.contactNo);
-    formData.append("groundLocation", data.groundLocation);
-    formData.append("paymentMethod", data.paymentMethod);
-
-    if (data.cnicFrontUrl) {
-      formData.append("cnicFrontUrl", data.cnicFrontUrl);
-    }
-    if (data.cnicBackUrl) {
-      formData.append("cnicBackUrl", data.cnicBackUrl);
-    }
-
-    console.log(formData);
-
-    mutate(formData);
-  };
+    onSubmit,
+    handleFileChange,
+    errors,
+    isLoading,
+    isError,
+    error,
+  } = useOnBoardForm(recaptchaToken);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -90,6 +58,13 @@ const OnBoardForm = () => {
           placeholder="Payment Method"
         />
         {errors.paymentMethod && <p>{errors.paymentMethod.message}</p>}
+
+        {/* reCAPTCHA */}
+        <div
+          className="g-recaptcha"
+          data-sitekey={RECAPTCHA_SITE_KEY}
+          data-callback="onRecaptchaSuccess"
+        ></div>
 
         <button type="submit" disabled={isLoading}>
           {isLoading ? "Submitting..." : "Submit"}
