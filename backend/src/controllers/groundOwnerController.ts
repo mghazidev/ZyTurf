@@ -132,6 +132,61 @@ export const registerGroundOwner = async (req: Request, res: Response) => {
   }
 };
 
+export const getGroundOwnerList = async (_req: Request, res: Response) => {
+  try {
+    const groundOwners = await datasources.groundOwnerDAOService.findAll();
+    sendResponse(res, 200, "Ground owners fetched successfully", groundOwners);
+  } catch (error: any) {
+    console.error(error);
+    sendError(res, 500, "Server Error", error.message);
+  }
+};
+
+export const deleteAllGroundOwners = async (_req: Request, res: Response) => {
+  try {
+    await datasources.groundOwnerDAOService.deleteAll();
+    return sendResponse(res, 200, "All ground owners deleted successfully");
+  } catch (error: any) {
+    console.error(error);
+    return sendError(res, 500, "Server Error", error.message);
+  }
+};
+
+export const deleteGroundOwnerById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const groundOwner = await datasources.groundOwnerDAOService.findById(id);
+    if (!groundOwner) {
+      return sendError(res, 404, "Ground owner not found");
+    }
+
+    await datasources.groundOwnerDAOService.deleteById(id);
+    return sendResponse(res, 200, "Ground owner deleted successfully");
+  } catch (error: any) {
+    console.error(error);
+    return sendError(res, 500, "Server Error", error.message);
+  }
+};
+
+export const getGroundOwnerById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const groundOwner = await datasources.groundOwnerDAOService.findById(id);
+    if (!groundOwner) {
+      return sendError(res, 404, "Ground owner not found");
+    }
+    return sendResponse(
+      res,
+      200,
+      "Ground owner fetched successfully",
+      groundOwner
+    );
+  } catch (error: any) {
+    console.error(error);
+    return sendError(res, 500, "Server Error", error.message);
+  }
+};
+
 export const updateGroundOwner = async (req: Request, res: Response) => {
   try {
     const form = formidable();
@@ -256,60 +311,5 @@ export const updateGroundOwner = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error(error);
     return sendError(res, HttpStatus.INTERNAL_SERVER_ERROR.code, error.message);
-  }
-};
-
-export const getGroundOwnerList = async (_req: Request, res: Response) => {
-  try {
-    const groundOwners = await datasources.groundOwnerDAOService.findAll();
-    sendResponse(res, 200, "Ground owners fetched successfully", groundOwners);
-  } catch (error: any) {
-    console.error(error);
-    sendError(res, 500, "Server Error", error.message);
-  }
-};
-
-export const deleteAllGroundOwners = async (_req: Request, res: Response) => {
-  try {
-    await datasources.groundOwnerDAOService.deleteAll();
-    return sendResponse(res, 200, "All ground owners deleted successfully");
-  } catch (error: any) {
-    console.error(error);
-    return sendError(res, 500, "Server Error", error.message);
-  }
-};
-
-export const deleteGroundOwnerById = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const groundOwner = await datasources.groundOwnerDAOService.findById(id);
-    if (!groundOwner) {
-      return sendError(res, 404, "Ground owner not found");
-    }
-
-    await datasources.groundOwnerDAOService.deleteById(id);
-    return sendResponse(res, 200, "Ground owner deleted successfully");
-  } catch (error: any) {
-    console.error(error);
-    return sendError(res, 500, "Server Error", error.message);
-  }
-};
-
-export const getGroundOwnerById = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const groundOwner = await datasources.groundOwnerDAOService.findById(id);
-    if (!groundOwner) {
-      return sendError(res, 404, "Ground owner not found");
-    }
-    return sendResponse(
-      res,
-      200,
-      "Ground owner fetched successfully",
-      groundOwner
-    );
-  } catch (error: any) {
-    console.error(error);
-    return sendError(res, 500, "Server Error", error.message);
   }
 };
