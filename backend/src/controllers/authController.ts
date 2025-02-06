@@ -35,31 +35,77 @@ export const userSignup = async (req: Request, res: Response) => {
  * @route
  * @desc
  */
-export const login = async (req: Request, res: Response) => {
+export const userLogin = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, phone, password } = req.body;
+    let user: any;
 
-    let user = await User.findOne({ email });
-    let role = "customer";
-
-    if (!user) {
-      user = await GroundOwner.findOne({ contactNo: email });
-      role = "admin";
+    if (email) {
+      user = await User.findOne({ email });
+    } else if (phone) {
+      user = await User.findOne({ phone });
     }
 
     if (!user) {
       return sendError(res, 400, "Invalid credentials");
     }
 
+    // Compare password
     if (!(await bcrypt.compare(password, user.password))) {
       return sendError(res, 400, "Invalid credentials");
     }
 
-    const token = jwt.sign({ id: user._id, role }, process.env.JWT_SECRET!, {
-      expiresIn: "7d",
-    });
+    // Generate JWT token for regular user
+    const token = jwt.sign(
+      { id: user._id, role: "customer" },
+      process.env.JWT_SECRET!,
+      {
+        expiresIn: "7d",
+      }
+    );
 
-    return sendResponse(res, 200, "Login successful", { token, role });
+    return sendResponse(res, 200, "Login successful", {
+      token,
+      role: "customer",
+    });
+  } catch (error: any) {
+    return sendError(res, 500, error.message);
+  }
+};
+
+/**
+ * Ground Owner Login
+ */
+export const groundOwnerLogin = async (req: Request, res: Response) => {
+  try {
+    const { email, phone, password } = req.body;
+    let groundOwner: any;
+
+    if (email) {
+      groundOwner = await GroundOwner.findOne({ email });
+    } else if (phone) {
+      groundOwner = await GroundOwner.findOne({ contactNo: phone });
+    }
+
+    if (
+      !groundOwner ||
+      !(await bcrypt.compare(password, groundOwner.password))
+    ) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      { id: groundOwner._id, role: "ground-owner" },
+      process.env.JWT_SECRET!,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    return sendResponse(res, 200, "Login successful", {
+      token,
+      role: "ground-owner",
+    });
   } catch (error: any) {
     return sendError(res, 500, error.message);
   }
