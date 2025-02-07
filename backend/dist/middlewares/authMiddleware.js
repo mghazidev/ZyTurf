@@ -6,20 +6,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authMiddleware = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = require("../config/config");
+const responseHandler_1 = require("../utils/responseHandler");
+const utils_1 = require("../utils/utils");
 const authMiddleware = (req, res, next) => {
     var _a;
-    const token = (_a = req.header("Authorization")) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
+    const token = (_a = req.header("Authorization")) === null || _a === void 0 ? void 0 : _a.replace("Bearer ", "");
     if (!token) {
-        return res.status(401).json({ message: "Unauthorized: No token provided" });
+        return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.BAD_REQUEST.code, "Access Denied");
     }
     try {
         const decoded = jsonwebtoken_1.default.verify(token, config_1.JWT_SECRET);
-        const { id, role } = decoded;
-        req.user = { id, role };
+        req.user = { userId: decoded.userId }; // Now TypeScript recognizes `req.user`
         next();
     }
     catch (error) {
-        return res.status(401).json({ message: "Unauthorized: Invalid token" });
+        return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.BAD_REQUEST.code, "Invalid Token");
     }
 };
 exports.authMiddleware = authMiddleware;

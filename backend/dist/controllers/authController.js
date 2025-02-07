@@ -12,9 +12,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.groundOwnerLogin = exports.userLogin = exports.userSignup = void 0;
+exports.userLogin = exports.userSignup = void 0;
 const authModel_1 = __importDefault(require("../models/authModel"));
-const groundOwnerModel_1 = __importDefault(require("../models/groundOwnerModel"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const responseHandler_1 = require("../utils/responseHandler");
@@ -77,33 +76,3 @@ const userLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.userLogin = userLogin;
-/**
- * Ground Owner Login
- */
-const groundOwnerLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { email, phone, password } = req.body;
-        let groundOwner;
-        if (email) {
-            groundOwner = yield groundOwnerModel_1.default.findOne({ email });
-        }
-        else if (phone) {
-            groundOwner = yield groundOwnerModel_1.default.findOne({ contactNo: phone });
-        }
-        if (!groundOwner ||
-            !(yield bcryptjs_1.default.compare(password, groundOwner.password))) {
-            return res.status(400).json({ message: "Invalid credentials" });
-        }
-        const token = jsonwebtoken_1.default.sign({ id: groundOwner._id, role: "ground-owner" }, process.env.JWT_SECRET, {
-            expiresIn: "7d",
-        });
-        return (0, responseHandler_1.sendResponse)(res, 200, "Login successful", {
-            token,
-            role: "ground-owner",
-        });
-    }
-    catch (error) {
-        return (0, responseHandler_1.sendError)(res, 500, error.message);
-    }
-});
-exports.groundOwnerLogin = groundOwnerLogin;

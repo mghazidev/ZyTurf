@@ -11,9 +11,7 @@ const userSchema = new mongoose_1.default.Schema({
     phone: { type: String },
     role: {
         type: String,
-        enum: ["customer", "ground-owner"],
         default: "customer",
     },
-    groundOwnerId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "GroundOwner" },
 }, { timestamps: true });
 exports.default = mongoose_1.default.model("User", userSchema);

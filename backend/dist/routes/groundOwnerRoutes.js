@@ -2,11 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const groundOwnerController_1 = require("../controllers/groundOwnerController");
+const authMiddleware_1 = require("../middlewares/authMiddleware");
 const groundOwnerRoutes = (0, express_1.Router)();
 groundOwnerRoutes.post("/register", groundOwnerController_1.registerGroundOwner);
+groundOwnerRoutes.post("/login", groundOwnerController_1.loginGroundOwner);
+// groundOwnerRoutes.post("/logout", authenticateGroundOwner, logoutGroundOwner);
 groundOwnerRoutes.get("/get-owners", groundOwnerController_1.getGroundOwnerList);
 groundOwnerRoutes.delete("/delete-all", groundOwnerController_1.deleteAllGroundOwners);
-groundOwnerRoutes.delete("/:id", groundOwnerController_1.deleteGroundOwnerById);
-groundOwnerRoutes.get("/:id", groundOwnerController_1.getGroundOwnerById);
-groundOwnerRoutes.put("/:id", groundOwnerController_1.updateGroundOwner);
+groundOwnerRoutes.delete("/:id", authMiddleware_1.authMiddleware, groundOwnerController_1.deleteGroundOwnerById);
+groundOwnerRoutes.get("/:id", authMiddleware_1.authMiddleware, groundOwnerController_1.getGroundOwnerById);
+groundOwnerRoutes.put("/:id", authMiddleware_1.authMiddleware, groundOwnerController_1.updateGroundOwner);
 exports.default = groundOwnerRoutes;

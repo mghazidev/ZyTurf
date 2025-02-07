@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getGroundOwnerById = exports.deleteGroundOwnerById = exports.deleteAllGroundOwners = exports.getGroundOwnerList = exports.updateGroundOwner = exports.registerGroundOwner = void 0;
+exports.getGroundOwnerById = exports.deleteGroundOwnerById = exports.deleteAllGroundOwners = exports.getGroundOwnerList = exports.updateGroundOwner = exports.registerGroundOwner = exports.logoutGroundOwner = exports.loginGroundOwner = void 0;
 const responseHandler_1 = require("../utils/responseHandler");
 const dao_1 = __importDefault(require("../services/dao"));
 const joi_1 = __importDefault(require("joi"));
@@ -22,9 +22,51 @@ const config_1 = require("../config/config");
 const Generic_1 = require("../utils/Generic");
 const formidable_1 = __importDefault(require("formidable"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const authModel_1 = __importDefault(require("../models/authModel"));
+const jwt_1 = require("../utils/jwt");
+const groundOwnerModel_1 = __importDefault(require("../models/groundOwnerModel"));
+const loginGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { email, password } = req.body;
+        // const user = (await datasources.groundOwnerDAOService.findByAny({
+        //   email: email.toLowerCase(),
+        // })) as IGroundOwner;
+        let groundUser;
+        if (email) {
+            groundUser = yield groundOwnerModel_1.default.findOne({ email });
+        }
+        console.log("Fetched user:", groundUser);
+        if (!groundUser) {
+            return (0, responseHandler_1.sendError)(res, 333, "Invalid User");
+        }
+        if (!(yield bcryptjs_1.default.compare(password, groundUser.password))) {
+            return (0, responseHandler_1.sendError)(res, 444, "Invalid password");
+        }
+        console.log("Fetched passeword:", password, groundUser.password);
+        if (!groundUser || !groundUser._id) {
+            return (0, responseHandler_1.sendError)(res, 555, "No user find");
+        }
+        const token = (0, jwt_1.generateToken)(groundUser._id.toString());
+        return (0, responseHandler_1.sendResponse)(res, utils_1.HttpStatus.OK.code, "Login successful", {
+            groundUser,
+            token,
+        });
+    }
+    catch (error) {
+        return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.INTERNAL_SERVER_ERROR.code, error.message);
+    }
+});
+exports.loginGroundOwner = loginGroundOwner;
+const logoutGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        return (0, responseHandler_1.sendResponse)(res, utils_1.HttpStatus.OK.code, "Logout successful", {});
+    }
+    catch (error) {
+        return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.INTERNAL_SERVER_ERROR.code, error.message);
+    }
+});
+exports.logoutGroundOwner = logoutGroundOwner;
 const registerGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c;
     try {
         const form = (0, formidable_1.default)();
         // Promise to parse the form and handle fields/files
@@ -55,11 +97,12 @@ const registerGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, func
             return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.BAD_REQUEST.code, error.details[0].message);
         }
         const { fullname, contactNo, email, groundLocation, paymentMethod, password, } = value;
-        const existingUser = yield authModel_1.default.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: "Email already exists" });
+        const existingGroundOwner = yield dao_1.default.groundOwnerDAOService.findByAny({
+            $or: [{ email }, { contactNo }],
+        });
+        if (existingGroundOwner) {
+            return (0, responseHandler_1.sendResponse)(res, utils_1.HttpStatus.OK.code, "Ground owner already registered", existingGroundOwner);
         }
-        // Handle file uploads for CNIC front and back
         const basePath = `${config_1.UPLOAD_BASE_PATH}/groundOwner`;
         let cnicFrontUrl = "";
         let cnicBackUrl = "";
@@ -88,13 +131,6 @@ const registerGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, func
             });
         }
         const hashedPassword = yield bcryptjs_1.default.hash(password, 10);
-        const newUser = yield authModel_1.default.create({
-            name: fullname,
-            phone: contactNo,
-            email: email, // Assuming email is also provided in the form
-            password: hashedPassword,
-            role: "ground-owner", // Assuming a role field is used
-        });
         const groundOwnerData = {
             fullname,
             contactNo,
@@ -104,10 +140,17 @@ const registerGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, func
             groundLocation,
             paymentMethod,
             password: hashedPassword,
-            userId: newUser._id,
         };
         const newGroundOwner = yield dao_1.default.groundOwnerDAOService.create(groundOwnerData);
-        return (0, responseHandler_1.sendResponse)(res, utils_1.HttpStatus.CREATED.code, "Ground owner registered successfully", newGroundOwner);
+        if (!newGroundOwner || typeof newGroundOwner !== "object") {
+            throw new Error("Failed to create ground owner");
+        }
+        const ownerId = (_c = newGroundOwner._id) === null || _c === void 0 ? void 0 : _c.toString();
+        if (!ownerId) {
+            throw new Error("Ground owner ID is missing");
+        }
+        const token = (0, jwt_1.generateToken)(ownerId);
+        return (0, responseHandler_1.sendResponse)(res, utils_1.HttpStatus.CREATED.code, "Ground owner registered successfully", { user: newGroundOwner, token });
     }
     catch (error) {
         console.error(error);
@@ -116,7 +159,7 @@ const registerGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, func
 });
 exports.registerGroundOwner = registerGroundOwner;
 const updateGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c;
     try {
         const form = (0, formidable_1.default)();
         const [fields, files] = yield new Promise((resolve, reject) => {
@@ -129,7 +172,11 @@ const updateGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, functi
                 }
             });
         });
+        const authReq = req;
         const groundOwnerId = req.params.id;
+        if (((_a = authReq.user) === null || _a === void 0 ? void 0 : _a.userId) !== groundOwnerId) {
+            return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.BAD_REQUEST.code, "Unauthorized action");
+        }
         Object.keys(fields).forEach((key) => {
             if (Array.isArray(fields[key])) {
                 fields[key] = fields[key][0];
@@ -165,8 +212,8 @@ const updateGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, functi
                 return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.BAD_REQUEST.code, "Ground owner with this contact number already exists");
             }
         }
-        const cnicFront = (_a = files.cnicFrontUrl) === null || _a === void 0 ? void 0 : _a[0];
-        const cnicBack = (_b = files.cnicBackUrl) === null || _b === void 0 ? void 0 : _b[0];
+        const cnicFront = (_b = files.cnicFrontUrl) === null || _b === void 0 ? void 0 : _b[0];
+        const cnicBack = (_c = files.cnicBackUrl) === null || _c === void 0 ? void 0 : _c[0];
         const basePath = `${config_1.UPLOAD_BASE_PATH}/groundOwner`;
         let cnicFrontUrl = existingGroundOwner.cnicFrontUrl;
         let cnicBackUrl = existingGroundOwner.cnicBackUrl;

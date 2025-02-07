@@ -9,7 +9,50 @@ import { UPLOAD_BASE_PATH, ALLOWED_FILE_TYPES } from "../config/config";
 import { Generic } from "../utils/Generic";
 import formidable from "formidable";
 import bcrypt from "bcryptjs";
-import User from "../models/authModel";
+import { generateToken } from "../utils/jwt";
+import { AuthRequest } from "../@types/types";
+import GroundOwner from "../models/groundOwnerModel";
+
+export const loginGroundOwner = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    let groundUser: any;
+
+    if (email) {
+      groundUser = await GroundOwner.findOne({ email });
+    }
+
+    if (!groundUser) {
+      return sendError(res, HttpStatus.BAD_REQUEST.code, "Invalid User");
+    }
+
+    if (!(await bcrypt.compare(password, groundUser.password))) {
+      return sendError(res, HttpStatus.BAD_REQUEST.code, "Invalid password");
+    }
+
+    if (!groundUser || !groundUser._id) {
+      return sendError(res, HttpStatus.BAD_REQUEST.code, "No user find");
+    }
+
+    const token = generateToken(groundUser._id.toString());
+
+    return sendResponse(res, HttpStatus.OK.code, "Login successful", {
+      groundUser,
+      token,
+    });
+  } catch (error: any) {
+    return sendError(res, HttpStatus.INTERNAL_SERVER_ERROR.code, error.message);
+  }
+};
+
+export const logoutGroundOwner = async (req: Request, res: Response) => {
+  try {
+    return sendResponse(res, HttpStatus.OK.code, "Logout successful", {});
+  } catch (error: any) {
+    return sendError(res, HttpStatus.INTERNAL_SERVER_ERROR.code, error.message);
+  }
+};
 
 export const registerGroundOwner = async (req: Request, res: Response) => {
   try {
@@ -60,12 +103,20 @@ export const registerGroundOwner = async (req: Request, res: Response) => {
       password,
     } = value;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email already exists" });
+    const existingGroundOwner =
+      await datasources.groundOwnerDAOService.findByAny({
+        $or: [{ email }, { contactNo }],
+      });
+
+    if (existingGroundOwner) {
+      return sendResponse(
+        res,
+        HttpStatus.OK.code,
+        "Ground owner already registered",
+        existingGroundOwner
+      );
     }
 
-    // Handle file uploads for CNIC front and back
     const basePath = `${UPLOAD_BASE_PATH}/groundOwner`;
 
     let cnicFrontUrl = "";
@@ -108,14 +159,6 @@ export const registerGroundOwner = async (req: Request, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await User.create({
-      name: fullname,
-      phone: contactNo,
-      email: email, // Assuming email is also provided in the form
-      password: hashedPassword,
-      role: "ground-owner", // Assuming a role field is used
-    });
-
     const groundOwnerData = {
       fullname,
       contactNo,
@@ -125,18 +168,29 @@ export const registerGroundOwner = async (req: Request, res: Response) => {
       groundLocation,
       paymentMethod,
       password: hashedPassword,
-      userId: newUser._id,
     };
 
     const newGroundOwner = await datasources.groundOwnerDAOService.create(
       groundOwnerData as IGroundOwner
     );
 
+    if (!newGroundOwner || typeof newGroundOwner !== "object") {
+      throw new Error("Failed to create ground owner");
+    }
+
+    const ownerId = (newGroundOwner as IGroundOwner)._id?.toString();
+
+    if (!ownerId) {
+      throw new Error("Ground owner ID is missing");
+    }
+
+    const token = generateToken(ownerId);
+
     return sendResponse(
       res,
       HttpStatus.CREATED.code,
       "Ground owner registered successfully",
-      newGroundOwner
+      { user: newGroundOwner, token }
     );
   } catch (error: any) {
     console.error(error);
@@ -159,8 +213,13 @@ export const updateGroundOwner = async (req: Request, res: Response) => {
         }
       });
     });
+    const authReq = req as AuthRequest;
 
     const groundOwnerId = req.params.id;
+
+    if (authReq.user?.userId !== groundOwnerId) {
+      return sendError(res, HttpStatus.BAD_REQUEST.code, "Unauthorized action");
+    }
 
     Object.keys(fields).forEach((key) => {
       if (Array.isArray(fields[key])) {

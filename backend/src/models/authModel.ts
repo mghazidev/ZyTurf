@@ -8,10 +8,8 @@ const userSchema = new mongoose.Schema(
     phone: { type: String },
     role: {
       type: String,
-      enum: ["customer", "ground-owner"],
       default: "customer",
     },
-    groundOwnerId: { type: mongoose.Schema.Types.ObjectId, ref: "GroundOwner" },
   },
   { timestamps: true }
 );

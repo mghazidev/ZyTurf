@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import User from "../models/authModel";
-import GroundOwner from "../models/groundOwnerModel";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { sendResponse, sendError } from "../utils/responseHandler";
@@ -67,44 +66,6 @@ export const userLogin = async (req: Request, res: Response) => {
     return sendResponse(res, 200, "Login successful", {
       token,
       role: "customer",
-    });
-  } catch (error: any) {
-    return sendError(res, 500, error.message);
-  }
-};
-
-/**
- * Ground Owner Login
- */
-export const groundOwnerLogin = async (req: Request, res: Response) => {
-  try {
-    const { email, phone, password } = req.body;
-    let groundOwner: any;
-
-    if (email) {
-      groundOwner = await GroundOwner.findOne({ email });
-    } else if (phone) {
-      groundOwner = await GroundOwner.findOne({ contactNo: phone });
-    }
-
-    if (
-      !groundOwner ||
-      !(await bcrypt.compare(password, groundOwner.password))
-    ) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    const token = jwt.sign(
-      { id: groundOwner._id, role: "ground-owner" },
-      process.env.JWT_SECRET!,
-      {
-        expiresIn: "7d",
-      }
-    );
-
-    return sendResponse(res, 200, "Login successful", {
-      token,
-      role: "ground-owner",
     });
   } catch (error: any) {
     return sendError(res, 500, error.message);
