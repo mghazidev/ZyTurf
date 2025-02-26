@@ -12,12 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userLogin = exports.userSignup = void 0;
+exports.deleteAllUsers = exports.getAllUsers = exports.userLogin = exports.userSignup = void 0;
 const authModel_1 = __importDefault(require("../models/authModel"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const responseHandler_1 = require("../utils/responseHandler");
-/**
+/**siguser-
  * @route
  * @desc
  */
@@ -34,7 +34,13 @@ const userSignup = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             password: hashedPassword,
             phone,
         });
-        return (0, responseHandler_1.sendResponse)(res, 201, "User registered successfully", newUser);
+        const token = jsonwebtoken_1.default.sign({ id: newUser._id, role: "customer" }, process.env.JWT_SECRET, {
+            expiresIn: "7d",
+        });
+        return (0, responseHandler_1.sendResponse)(res, 201, "User registered successfully", {
+            user: newUser,
+            token,
+        });
     }
     catch (error) {
         return (0, responseHandler_1.sendError)(res, 500, error.message);
@@ -76,3 +82,23 @@ const userLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.userLogin = userLogin;
+const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const users = yield authModel_1.default.find({}, "-password");
+        return (0, responseHandler_1.sendResponse)(res, 200, "All user fetched successfully", users);
+    }
+    catch (error) {
+        return (0, responseHandler_1.sendError)(res, 500, error.message);
+    }
+});
+exports.getAllUsers = getAllUsers;
+const deleteAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield authModel_1.default.deleteMany({});
+        return (0, responseHandler_1.sendResponse)(res, 200, `${result.deletedCount} users deleted successfully`);
+    }
+    catch (error) {
+        return (0, responseHandler_1.sendError)(res, 500, error.message);
+    }
+});
+exports.deleteAllUsers = deleteAllUsers;

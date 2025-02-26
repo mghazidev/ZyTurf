@@ -24,26 +24,22 @@ const formidable_1 = __importDefault(require("formidable"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jwt_1 = require("../utils/jwt");
 const groundOwnerModel_1 = __importDefault(require("../models/groundOwnerModel"));
+const blacklistedTokens = new Set();
 const loginGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, password } = req.body;
-        // const user = (await datasources.groundOwnerDAOService.findByAny({
-        //   email: email.toLowerCase(),
-        // })) as IGroundOwner;
         let groundUser;
         if (email) {
             groundUser = yield groundOwnerModel_1.default.findOne({ email });
         }
-        console.log("Fetched user:", groundUser);
         if (!groundUser) {
-            return (0, responseHandler_1.sendError)(res, 333, "Invalid User");
+            return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.BAD_REQUEST.code, "Invalid User");
         }
         if (!(yield bcryptjs_1.default.compare(password, groundUser.password))) {
-            return (0, responseHandler_1.sendError)(res, 444, "Invalid password");
+            return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.BAD_REQUEST.code, "Invalid password");
         }
-        console.log("Fetched passeword:", password, groundUser.password);
         if (!groundUser || !groundUser._id) {
-            return (0, responseHandler_1.sendError)(res, 555, "No user find");
+            return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.BAD_REQUEST.code, "No user find");
         }
         const token = (0, jwt_1.generateToken)(groundUser._id.toString());
         return (0, responseHandler_1.sendResponse)(res, utils_1.HttpStatus.OK.code, "Login successful", {
@@ -57,11 +53,20 @@ const loginGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.loginGroundOwner = loginGroundOwner;
 const logoutGroundOwner = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
+        // Extract the token from the Authorization header
+        const token = (_a = req.header("Authorization")) === null || _a === void 0 ? void 0 : _a.replace("Bearer ", "");
+        if (!token) {
+            return (0, responseHandler_1.sendResponse)(res, utils_1.HttpStatus.BAD_REQUEST.code, "No token provided", {});
+        }
+        // Add the token to the blacklist
+        blacklistedTokens.add(token);
+        // Now that the token is blacklisted, it will be treated as invalid in the future
         return (0, responseHandler_1.sendResponse)(res, utils_1.HttpStatus.OK.code, "Logout successful", {});
     }
     catch (error) {
-        return (0, responseHandler_1.sendError)(res, utils_1.HttpStatus.INTERNAL_SERVER_ERROR.code, error.message);
+        return (0, responseHandler_1.sendResponse)(res, utils_1.HttpStatus.INTERNAL_SERVER_ERROR.code, error.message, {});
     }
 });
 exports.logoutGroundOwner = logoutGroundOwner;
