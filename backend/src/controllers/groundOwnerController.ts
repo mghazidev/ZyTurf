@@ -13,6 +13,8 @@ import { generateToken } from "../utils/jwt";
 import { AuthRequest } from "../@types/types";
 import GroundOwner from "../models/groundOwnerModel";
 
+const blacklistedTokens = new Set<string>();
+
 export const loginGroundOwner = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -48,9 +50,30 @@ export const loginGroundOwner = async (req: Request, res: Response) => {
 
 export const logoutGroundOwner = async (req: Request, res: Response) => {
   try {
+    // Extract the token from the Authorization header
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+
+    if (!token) {
+      return sendResponse(
+        res,
+        HttpStatus.BAD_REQUEST.code,
+        "No token provided",
+        {}
+      );
+    }
+
+    // Add the token to the blacklist
+    blacklistedTokens.add(token);
+
+    // Now that the token is blacklisted, it will be treated as invalid in the future
     return sendResponse(res, HttpStatus.OK.code, "Logout successful", {});
   } catch (error: any) {
-    return sendError(res, HttpStatus.INTERNAL_SERVER_ERROR.code, error.message);
+    return sendResponse(
+      res,
+      HttpStatus.INTERNAL_SERVER_ERROR.code,
+      error.message,
+      {}
+    );
   }
 };
 
@@ -213,6 +236,7 @@ export const updateGroundOwner = async (req: Request, res: Response) => {
         }
       });
     });
+
     const authReq = req as AuthRequest;
 
     const groundOwnerId = req.params.id;
