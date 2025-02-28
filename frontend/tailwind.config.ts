@@ -12,6 +12,8 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+
+        neonBlue: "#00FFDD", // You can change this color to any neon color you prefer
       },
     },
   },

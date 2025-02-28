@@ -102,63 +102,81 @@ const OnBoardForm = () => {
       </h2>
 
       <div className="flex flex-col space-y-3">
+        {/* Full Name */}
         <input
           type="text"
           {...register("fullname")}
           placeholder="Full Name"
-          className="p-3 bg-white/20 border border-white/30 rounded-lg focus:ring-2 focus:ring-green-400 text-white placeholder-gray-300"
+          className="p-3 bg-transparent border-b-2 border-gray-300 focus:outline-none focus:ring-0 focus:border-neonBlue text-white placeholder-gray-300 transition"
         />
         {errors.fullname && (
           <p className="text-red-400">{errors.fullname.message}</p>
         )}
 
-        <input
-          type="text"
-          {...register("contactNo")}
-          placeholder="Contact Number"
-          className="p-3 bg-white/20 border border-white/30 rounded-lg focus:ring-2 focus:ring-blue-400 text-white placeholder-gray-300"
-        />
-        {errors.contactNo && (
-          <p className="text-red-400">{errors.contactNo.message}</p>
-        )}
+        {/* Email and Contact Number */}
+        <div className="flex gap-3">
+          <input
+            type="email"
+            {...register("email")}
+            placeholder="Email"
+            className="w-full p-3 bg-transparent border-b-2 border-gray-300 focus:outline-none focus:ring-0 focus:border-neonBlue text-white placeholder-gray-300 transition"
+          />
+          {errors.email && (
+            <p className="text-red-400">{errors.email.message}</p>
+          )}
 
+          <input
+            type="text"
+            {...register("contactNo")}
+            placeholder="Contact Number"
+            className="p-3 bg-transparent border-b-2 border-gray-300 focus:outline-none focus:ring-0 focus:border-neonBlue text-white placeholder-gray-300 transition"
+          />
+          {errors.contactNo && (
+            <p className="text-red-400">{errors.contactNo.message}</p>
+          )}
+        </div>
+
+        {/* CNIC Front Image */}
         <label className="text-sm text-white">CNIC Front Image:</label>
         <input
           type="file"
           accept="image/*"
           onChange={(e) => handleFileChange("cnicFrontUrl", e.target.files)}
-          className="p-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-gray-300"
+          className="p-2 bg-transparent border-b-2 border-gray-300 focus:outline-none focus:ring-0 focus:border-neonBlue text-white placeholder-gray-300 transition"
         />
         {errors.cnicFrontUrl && (
           <p className="text-red-400">{errors.cnicFrontUrl.message}</p>
         )}
 
+        {/* CNIC Back Image */}
         <label className="text-sm text-white">CNIC Back Image:</label>
         <input
           type="file"
           accept="image/*"
           onChange={(e) => handleFileChange("cnicBackUrl", e.target.files)}
-          className="p-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-gray-300"
+          className="p-2 bg-transparent border-b-2 border-gray-300 focus:outline-none focus:ring-0 focus:border-neonBlue text-white placeholder-gray-300 transition"
         />
         {errors.cnicBackUrl && (
           <p className="text-red-400">{errors.cnicBackUrl.message}</p>
         )}
 
+        {/* Ground Location */}
         <input
           type="text"
           {...register("groundLocation")}
           placeholder="Ground Location"
-          className="p-3 bg-white/20 border border-white/30 rounded-lg focus:ring-2 focus:ring-yellow-400 text-white placeholder-gray-300"
+          className="p-3 bg-transparent border-b-2 border-gray-300 focus:outline-none focus:ring-0 focus:border-neonBlue text-white placeholder-gray-300 transition"
         />
         {errors.groundLocation && (
           <p className="text-red-400">{errors.groundLocation.message}</p>
         )}
 
+        {/* Payment Method */}
         <input
           type="text"
           {...register("paymentMethod")}
           placeholder="Payment Method"
-          className="p-3 bg-white/20 border border-white/30 rounded-lg focus:ring-2 focus:ring-purple-400 text-white placeholder-gray-300"
+          className="p-3 bg-transparent border-b-2 border-gray-300 focus:outline-none focus:ring-0 focus:border-neonBlue text-white placeholder-gray-300 transition"
         />
         {errors.paymentMethod && (
           <p className="text-red-400">{errors.paymentMethod.message}</p>

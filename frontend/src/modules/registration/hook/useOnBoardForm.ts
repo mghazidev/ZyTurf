@@ -33,6 +33,7 @@ export const useOnBoardForm = (recaptchaToken: string | null) => {
 
     const formData = new FormData();
     formData.append("fullname", data.fullname);
+    formData.append("email", data.email);
     formData.append("contactNo", data.contactNo);
     formData.append("groundLocation", data.groundLocation);
     formData.append("paymentMethod", data.paymentMethod);

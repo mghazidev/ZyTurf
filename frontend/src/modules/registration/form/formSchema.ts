@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const formSchema = z.object({
   fullname: z.string().min(1, "Full Name is required"),
+  email: z.string().email("Invalid email format"),
   contactNo: z.string().min(1, "Contact Number is required"),
   groundLocation: z.string().min(1, "Ground Location is required"),
   paymentMethod: z.string().min(1, "Payment Method is required"),
