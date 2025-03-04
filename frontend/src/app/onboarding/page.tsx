@@ -50,12 +50,10 @@ const floatingVariants = {
 const Page = () => {
   return (
     <div className="relative w-full h-screen flex items-center justify-center bg-gradient-to-br from-green-900 via-gray-900 to-blue-900 overflow-hidden">
-      {/* Blurred Neon Background */}
       <div className="absolute inset-0 bg-gradient-radial from-green-500/40 to-transparent blur-[200px]"></div>
       <div className="absolute inset-0 bg-gradient-radial from-blue-500/40 to-transparent blur-[200px]"></div>
       <div className="absolute inset-0 bg-gradient-radial from-orange-400/30 to-transparent blur-[180px]"></div>
 
-      {/* Moving Sports Icons */}
       <motion.img
         src="/basketball.png"
         alt="Basketball"
@@ -92,7 +90,6 @@ const Page = () => {
         animate="animate"
       />
 
-      {/* Form Container moved to the right */}
       <motion.div
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
